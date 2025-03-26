@@ -22,24 +22,39 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td><a href="/detail">타이틀</a></td>
-                <td align="center">작성자이름</td>
-                <td align="center">99999</td>
-                <td align="center">2024.12.25</td>
-            </tr>
+            {{#each posts}}
+                <tr>
+                    <td><a href="/detail/{{_id}}">{{title}}</a></td>
+                    <td align="center">{{writer}}</td>
+                    <td align="center">{{hits}}</td>
+                    <td align="center">{{dateString createdDt}}</td>
+                </tr>
+            {{/each}}
         </tbody>
     </table>
 </div>
 
 <!--페이징 영역-->
 <div>
-    <a>&lt;&lt;</a>
+    {{#with paginator}}  <!--with 내장 헬퍼 함수 사용-->
+    <a href="/?page=1&search={{@root.search}}">&lt;&lt;</a>
+    {{#if hasPrev}}
+    <a href="/?page={{prevPage}}&search={{@root.search}}">&lt;</a>
+    {{else}}
     <a>&lt;</a>
-    <a>1</a>
-    <a>2</a>
-    <a>3</a>
-    <a>4</a>
+    {{/if}}
+    {{#each pageList}}
+    {{#if (eq . @root.paginator.page)}}
+    <a>{{.}}</a>
+    {{else}}
+    <a href="/?page={{.}}&search={{@root.search}}">{{.}}</a>
+    {{/if}}
+    {{/each}}
+    {{#if hasNext}}
+    <a href="/?page={{nextPage}}&search={{@root.search}}">&gt;</a>
+    {{else}}
     <a>&gt;</a>
-    <a>&gt;&gt;</a>
+    {{/if}}
+    <a href="/?page={{lastPage}}&search={{@root.search}}">&gt;&gt;</a>
+    {{/with}}
 </div>

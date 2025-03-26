@@ -26,7 +26,7 @@ app.get('/', async (req, res) => {
     const search = req.query.search || "";
     try {
         // postService.list에서 글 목록과 페이지네이터를 가져옴
-        const [pasts, paginator] = await postService.list(collection, page, search);
+        const [posts, paginator] = await postService.list(collection, page, search);
 
         // 리스트 페이지 렌더링
         res.render("home", { title: "테스트 게시판", search, paginator, posts})

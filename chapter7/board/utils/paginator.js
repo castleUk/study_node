@@ -8,7 +8,7 @@ const PAGE_LIST_SIZE = 10; // 최대 몇 개의 페이지를 보여줄지 정하
 module.exports = ({ totalCount, page, perPage = 10}) => {
     const PER_PAGE = perPage;
     const totalPage = Math.ceil(totalCount / PER_PAGE); // 총 페이지 수 계산
-    // Math.ceil() 소수를 올림하여 가장 가까운 정수를 반환ㅁ
+    // Math.ceil() 소수를 올림하여 가장 가까운 정수를 반환
 
     // 시작 페이지 : 몫 * PAGE_LIST_SIZE + 1
     let quotient = parseInt(page / PAGE_LIST_SIZE);
@@ -37,8 +37,5 @@ module.exports = ({ totalCount, page, perPage = 10}) => {
         isFirstPage,
         isLastPage,
     };
-    return paginator
-
-
-
+    return paginator;
 }
