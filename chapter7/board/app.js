@@ -4,6 +4,7 @@ const app = express();
 // 몽고디비 연결 함수
 const mongodbConnection = require("./configs/mongodb-connection");
 const postService = require("./services/post-service");
+const {json} = require("express");
 
 let collection;
 
@@ -52,8 +53,27 @@ app.post("/write", async (req, res) => {
 });
 
 app.get("/detail/:id", async (req, res) => {
-    res.render("detail", {title: "테스트 게시판",})
+    // 게시글 정보 가져오기
+    const result = await postService.getDetailPost(collection, req.params.id);
+    console.log(result);
+    res.render("detail", {
+        title: "테스트 게시판",
+        post :  result,
+    });
 });
+
+app.post("/check-password", async (req, res) => {
+    const { id, password} = req.body;
+    // postService의 getPostByIdAndPassword() 함수를 사용해 게시글 데이터 확인
+    const post = await postService.getPostByIdAndPassword(collection, {id, password});
+
+    // 데이터가 있으면 isExist true, 없으면 false
+    if (!post) {
+        return res.status(404).json({isExist: false});
+    } else {
+        return res.json({isExist: true});
+    }
+})
 
 
 app.listen(3000, async () => {
