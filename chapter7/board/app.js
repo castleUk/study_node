@@ -75,6 +75,8 @@ app.post("/check-password", async (req, res) => {
     }
 })
 
+// 쓰기 페이지 이동 mode는 create
+
 
 app.listen(3000, async () => {
     console.log("Server started");
