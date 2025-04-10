@@ -5,6 +5,7 @@ const app = express();
 const mongodbConnection = require("./configs/mongodb-connection");
 const postService = require("./services/post-service");
 const {json} = require("express");
+const {ObjectId} = require("mongodb");
 
 let collection;
 
@@ -52,6 +53,7 @@ app.post("/write", async (req, res) => {
     res.redirect(`/detail/${result.insertedId}`);
 });
 
+// 상세페이지로 이동
 app.get("/detail/:id", async (req, res) => {
     // 게시글 정보 가져오기
     const result = await postService.getDetailPost(collection, req.params.id);
@@ -62,6 +64,7 @@ app.get("/detail/:id", async (req, res) => {
     });
 });
 
+// 패스워드 체크
 app.post("/check-password", async (req, res) => {
     const { id, password} = req.body;
     // postService의 getPostByIdAndPassword() 함수를 사용해 게시글 데이터 확인
@@ -76,6 +79,108 @@ app.post("/check-password", async (req, res) => {
 })
 
 // 쓰기 페이지 이동 mode는 create
+app.get("/write", (req, res) => {
+    res.render("write", {title: "테스트 게시판", mode: "create"});
+});
+
+// 수정 페이지로 이동 mode는 modify
+app.get("/modify/:id", async (req, res) => {
+
+    // getPostById() 함수로 게시글 데이터를 받아옴
+    const post = await postService.getPostById(collection, req.params.id);
+    console.log(post);
+    res.render("write", {title: "테스트 게시판", mode: "modify", post});
+});
+
+// 게시글 수정 API
+app.post("/modify/", async (req, res) => {
+    const { id, title, writer, password, content } = req.body;
+
+    const post = {
+        title,
+        writer,
+        password,
+        content,
+        createdDt: new Date().toISOString(),
+    };
+    // 업데이트 결과
+    const result = postService.updatePost(collection, id, post);
+    res.redirect(`/detail/${id}`);
+});
+
+// 게시글 삭제
+app.delete("/delete", async (req, res) => {
+    const { id, password } = req.body;
+    try {
+        // collection의 deleteOne을 사용해 게시글 하나를 삭제
+        const result = await collection.deleteOne({_id: new ObjectId(id), password: password});
+        /* deleteOne() - 조건에 맞는 도큐먼트를 하나 삭제
+        * 결과 : DeleteResult 객체 = acknowledged(boolean_삭제승인여부) + deletedCount(숫자_삭제한 도큐먼트 개수)
+        */
+        // 삭제 결과가 잘 못된 경우의 처리
+        if (result.deletedCount !== 1) {
+            console.log("삭제 실패");
+            return res.json({isSuccess: false});
+        }
+        return res.json({isSuccess: true});
+    } catch (error) {
+        // 에러가 난 경우 처리
+        console.error(error);
+        return res.json({isSuccess: false});
+    }
+})
+
+// 댓글 추가
+app.post("/write-comment", async (req, res) => {
+    const { id, name, password, comment } = req.body;
+    const post = await postService.getPostById(collection, id);
+
+    if (post.comments) {
+        post.comments.push({
+            idx: post.comments.length +1,
+            name,
+            password,
+            comment,
+            createdDt: new Date().toISOString(),
+        });
+    } else {
+        post.comments = [
+            {
+                idx: 1,
+                name,
+                password,
+                comment,
+                createdDt: new Date().toISOString(),
+            }
+        ];
+    }
+    // 업데이트하기. 업데이트 후에는 상세페이지로 리다이렉트
+    postService.updatePost(collection, id, post);
+    return res.redirect(`/detail/${id}`);
+
+});
+
+app.delete("/delete-commnet", async (req, res) => {
+    const { id, idx, password } = req.body;
+
+    const post = await collection.findOne({
+        _id: new ObjectId(id),
+        comments: { $elemMatch: { idx: parseInt(idx), password } },
+        },
+        postService.projectionOption,
+    );
+
+    // 데이터가 없으면 isSuccess : false를 주면서 종료
+    if (!post) {
+        return res.json({isSuccess: false});
+    }
+
+    // 댓글 번호가 idx 이외인 것만 comments에 다시 할당 후 저장
+    post.comments = post.comments.filter((comment) => comment.idx != idx);
+    postService.updatePost(collection, id, post);
+    return res.json({isSuccess: true});
+});
+
 
 
 app.listen(3000, async () => {

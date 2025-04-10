@@ -1,18 +1,22 @@
-<h2>[{{title}}] 글 작성</h2>
+<h2>[{{title}}] 글 {{#if (eq mode "create")}} 작성{{else}}수정{{/if}}</h2>
 
 <div>
     <!--글쓰기 폼-->
-    <form name="boardForm" method="post" action="/write">
+    <form name="boardForm" method="post" {{#if (eq mode "create")}}action="/write" {{else}}action="/modify" {{/if}}>
+
+        {{#if (eq mode "modify")}}
+            <input type="hidden" name="id" value="{{post._id}}"/>
+        {{/if}}
 
         <!--제목 입력 칸-->
         <div>
             <label>제목</label>
-            <input type="text" name="title" placeholder="제목을 넣어주세요" value="" />
+            <input type="text" name="title" placeholder="제목을 넣어주세요" value="{{post.title}}" />
         </div>
         <!--이름 입력 칸-->
         <div>
             <label>이름</label>
-            <input type="text" name="writer" placeholder="이름을 넣어주세요" value="" />
+            <input type="text" name="writer" placeholder="이름을 넣어주세요" value="{{post.writer}}" />
         </div>
         <!--비밀번호 입력 칸-->
         <div>
@@ -23,7 +27,7 @@
         <!--본문 입력-->
         <div>
             <label>본문을 입력해주세요</label><br />
-            <textarea placeholder="본문" name="content" rows="10" cols="50"></textarea>
+            <textarea placeholder="본문" name="content" rows="10" cols="50">{{post.content}}</textarea>
         </div>
         <br />
         <!--버튼 영역-->

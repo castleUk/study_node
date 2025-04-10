@@ -17,10 +17,11 @@
 
 <section>
     <div>
-        <h3>3개의 댓글이 있습니다.</h3>
+        <h3>{{lengthOfList comments}}개의 댓글이 있습니다.</h3>
     </div>
 
     <form method="POST" action="/write-comment">
+        <input type="hidden" name="id" value="{{_id}}"/>
         <div>
             <div>
                 <input type="text" name="name" placeholder="이름" />
@@ -35,20 +36,21 @@
 </section>
 
 <section>
+    {{#each comments}}
     <div>
         <div>
-            작성자 : <b>댓글 작성자</b>
+            작성자 : <b>{{name}}</b>
         </div>
         <div>
-            작성일시 : 2024-10-01 00:00:00
-            <button onclick="deleteComment('1')">삭제</button>
+            작성일시 : {{dateString createdDt}}
+            <button onclick="deleteComment('{{idx}}')">삭제</button>
         </div>
     </div>
     <div>
         <pre>{{comment}}</pre>
     </div>
+        {{/each}}
 </section>
-
 {{/with}}
 
 <footer>
@@ -89,5 +91,56 @@
         }
     }
 
-    async function deletePost() {}
+    const deleteOption = {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    }
+
+    async function deletePost() {
+        // 프롬프트로 값 입력받기
+        const password = prompt("삭제하려면 패스워드를 입력해주세요");
+        // 프롬프트에서 취소를 누른 경우 처리
+        if(!password) {
+            return;
+        }
+        // fetch API를 사용해 delete API 호출
+        const result = await fetch("/delete", {
+            ...deleteOption,
+            body: JSON.stringify({ id : "{{post._id}}", password})
+        });
+
+        // delete API의 결과에 따라 다른 메시지 출력
+        const data = await result.json();
+        if (!data.isSuccess) {
+            alert("삭제에 실패했습니다. 패스워드를 확인해주세요");
+            return;
+        }
+
+        document.location = "/";
+    }
+
+    async function deleteComment(ix) {
+        const password = prompt("삭제하려면 패스워드를 입력해주세요");
+        // 프롬프트에서 취소를 누른 경우 처리
+        if(!password) {
+            return;
+        }
+        // delete-comment API 실행
+        const result = await fetch("/delete-comment", {
+           ...deleteOption,
+           body: JSON.stringify({ id : "{{post._id}}", idx, password})
+        });
+
+        // 댓글 삭제 실패 시 메시지 띄우고 함수 실행 종료
+        const data = await result.json();
+        if (!data.isSuccess) {
+            alert("삭제에 실패했습니다. 패스워드를 확인해주세요");
+            return;
+        }
+
+        alert("삭제 성공!");
+        documenet.location.reload();
+    }
 </script>
